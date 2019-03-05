@@ -222,7 +222,7 @@ cmd: -exit - Выйти из приложения
                         }
                         break;
                     case DescProfile.experience:
-                        result = int.TryParse(value, out profile.experience);
+                        result = (int.TryParse(value, out profile.experience) && profile.experience > 0);
                         break;
                     case DescProfile.mobileNumber:
                         if (value.Length < 5)
