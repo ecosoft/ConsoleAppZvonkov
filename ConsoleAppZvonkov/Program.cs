@@ -79,6 +79,11 @@ cmd: -exit - Выйти из приложения
             "-restart_profile", // - Заполнить анкету заново(Команда доступна только при заполнении анкеты, вводится вместо ответа на любой вопрос)
         };
 
+        protected static void myHandler(object sender, ConsoleCancelEventArgs args)
+        {
+            args.Cancel = true;
+        }
+
         static int GetAge(DateTime birthDate) // вычисляем возраст с учётом даты
         {
             DateTime now = DateTime.Today;
@@ -350,8 +355,7 @@ cmd: -exit - Выйти из приложения
                 string strMessage = MessageString(numQuestion);
                 string strQuestion = QuestionString(numQuestion);
 
-                Console.Write("{0}{1}", strQuestion, strSplit);
-                string str = Console.ReadLine();
+                string str = ReadCommand(string.Format("{0}{1}", strQuestion, strSplit) );
                 string[] command = str.Split(' ');
 
                 if (Array.IndexOf(editCommands, command[0]) == -1)
@@ -433,12 +437,12 @@ cmd: -exit - Выйти из приложения
             {
                 foreach (var item in dir.GetFiles("*.txt"))
                 {
-                    if(LoadProfile(ref profile, item.Name))
+                    if (LoadProfile(ref profile, item.Name))
                     {
                         numProfiles++;
                         sumAge += GetAge(profile.birthday);
 
-                        if(profile.experience > maxExp)
+                        if (profile.experience > maxExp)
                         {
                             maxExp = profile.experience;
                             nameMaxExp = profile.fullName;
@@ -455,7 +459,7 @@ cmd: -exit - Выйти из приложения
                         else
                         {
                             langStat[profile.programmingLanguage]++;
-                            if(langStat[profile.programmingLanguage] > maxLang)
+                            if (langStat[profile.programmingLanguage] > maxLang)
                             {
                                 maxLang = langStat[profile.programmingLanguage];
                                 popLangName = profile.programmingLanguage;
@@ -469,15 +473,20 @@ cmd: -exit - Выйти из приложения
                 Console.WriteLine("Ошибка чтения анкет.");
                 Console.WriteLine(e.Message);
             }
-
-            avrAge = sumAge / numProfiles;
-            Console.WriteLine("Средний возраст всех опрошенных: {0} ", YearsToString(avrAge));
-            Console.WriteLine("Самый популярный язык: {0}", popLangName);
-            Console.WriteLine("Самый опытный программист: {0}", nameMaxExp);
-            //Средний возраст всех опрошенных: <Посчитать средний возраст всех тех, кто заполнял анкеты, целое число> (год, года, лет в зависимости от полученного числа, т.е если средний возраст получился 22, то вывести 22 года, если 25, то 25 лет итд)
-            //Самый популярный язык программирования: < Название языка программирования, который большинство пользователей указали как любимый >
-            //Самый опытный программист: < ФИО человека, у которого указан самый большой опыт работы >
-
+            if (numProfiles == 0)
+            {
+                Console.WriteLine("Анкет не найдено.");
+            }
+            else
+            {
+                avrAge = sumAge / numProfiles;
+                Console.WriteLine("Средний возраст всех опрошенных: {0} ", YearsToString(avrAge));
+                Console.WriteLine("Самый популярный язык: {0}", popLangName);
+                Console.WriteLine("Самый опытный программист: {0}", nameMaxExp);
+                //Средний возраст всех опрошенных: <Посчитать средний возраст всех тех, кто заполнял анкеты, целое число> (год, года, лет в зависимости от полученного числа, т.е если средний возраст получился 22, то вывести 22 года, если 25, то 25 лет итд)
+                //Самый популярный язык программирования: < Название языка программирования, который большинство пользователей указали как любимый >
+                //Самый опытный программист: < ФИО человека, у которого указан самый большой опыт работы >
+            }
         }
 
         static void DeleteProfile(string nameFile)
@@ -537,8 +546,26 @@ cmd: -exit - Выйти из приложения
             }
         }
 
+        static string ReadCommand(string msg)
+        {
+            string result = "";
+            while (result == "")
+            {
+                Console.Write(msg);
+                result = Console.ReadLine();
+                if (result == null)
+                {
+                    Console.WriteLine("^C");
+                    result = "";
+                }
+            }
+            
+            return result;
+        }
+
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(myHandler);
 
             Profile profile = new Profile();
 
@@ -547,14 +574,12 @@ cmd: -exit - Выйти из приложения
             Console.WriteLine("Выберите действие:");
             do
             {
-                Console.Write(bashMessage);
-                command = Console.ReadLine().Split(' ');
-
+                command = ReadCommand(bashMessage).Split(' ');
+                
                 while (Array.IndexOf(commands, command[0]) == -1)
                 {
                     Console.WriteLine("Ошибка! Для помощи введите -help");
-                    Console.Write(bashMessage);
-                    command = Console.ReadLine().Split(' ');
+                    command = ReadCommand(bashMessage).Split(' ');
                 }
                 switch (command[0])
                 {
